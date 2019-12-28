@@ -99,7 +99,7 @@ function isStreaming() {
 
 function getMetaValue(meta, i) {
     if (isStreaming()) {
-        // Saycast는 타이틀과 아티스트를 서로 바꿔야 한다.
+        // at saycast url, change the title with the singer
         if (metaData.Path.includes('saycast.com')) meta = metas.saycast[i];
     }
     return fb.TitleFormat('%' + meta + '%').Eval();
@@ -149,36 +149,37 @@ function on_paint(gr) {
     panel.paint(gr);
     buttons.paint(gr);
 
-    // 앨범 커버 출력
+    // album art
     if (albumImg) _drawImage(gr, albumImg, 0, 0, panel.h, panel.h, image.centre);
 
     if (metaData) {
-        // 트랙 정보 출력
-        let y = 0;
+        // track info
+        let y = metas.y;
         for (let i = 0; i < metas.list.length; i++) {
-            // Path는 스트리밍 주소만 출력한다.
+            // path show only streaming url
             if (i == metas.path && !isStreaming()) continue;
 
             const meta = metas.list[i];
             let text = fb.IsPlaying ? getMetaValue(meta, i) :
                 fb.TitleFormat('%' + meta + '%').EvalWithMetadb(metaData);
 
-            // 공백 또는 HTML태그는 출력 생략
+            // skip space or html tag
             if (!text || text == '?' || text.startsWith('<')) continue;
 
-            y += metas.h;
             gr.GdiDrawText(meta, panel.fonts.title, panel.colours.text, metas.x, y, metas.w, metas.h, 0);
             gr.GdiDrawText(text, panel.fonts.title, panel.colours.text, metas.x2, y, metas.w2, metas.h, 0);
+            y += metas.h;
         }
 
-        // 검색 막대 진행 상황 출력
+        // seek bar progress
         if (fb.IsPlaying && fb.PlaybackLength > 0) {
             gr.FillSolidRect(seekbar.x, seekbar.y, seekbar.pos(), seekbar.h, panel.colours.highlight);
         }
     }
+    // seek bar border line
     gr.DrawRect(seekbar.x, seekbar.y, seekbar.w, seekbar.h, 1, panel.colours.text);
 
-    // 실행 시간 출력
+    // play time & length
     playtime.y = seekbar.y - metas.h;
     playtime.h = metas.h;
     let playTimeText = fb.IsPlaying ? playtime.playing.Eval() : playtime.stop.EvalWithMetadb(metaData);
@@ -189,26 +190,26 @@ function on_paint(gr) {
 function on_size() {
     panel.size();
 
-    // 검색 막대 위치
-    let margin = panel.h / 10;
-    seekbar.h = panel.fonts.normal.Height * 0.6;
+    // seek bar position
+    let margin = panel.fonts.title.Height;
+    seekbar.h = panel.fonts.title.Height * 0.6;
     seekbar.x = panel.h + margin;
     seekbar.w = panel.w - seekbar.x - margin;
     seekbar.y = panel.h - seekbar.h - margin;
 
-    // 트랙 정보 위치
+    // track info position
     metas.x = seekbar.x;
     metas.w = panel.fonts.title.Size * metas.metaNameW;
-    metas.y = 0;
+    metas.y = margin;
     metas.h = panel.fonts.title.Height * metas.lineH;
     metas.w2 = panel.w - metas.x - metas.w;
     metas.x2 = metas.x + metas.w;
 
-    // 실행 시간 위치
+    // play time position
     playtime.x = seekbar.x;
     playtime.w = seekbar.w;
 
-    // 버튼 위치
+    // buttons position
     button.x = seekbar.x;
     button.y = seekbar.y - button.h;
 
