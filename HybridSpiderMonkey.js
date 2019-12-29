@@ -4,46 +4,56 @@ include(fb.ComponentPath + 'samples\\complete\\js\\helpers.js');
 include(fb.ComponentPath + 'samples\\complete\\js\\panel.js');
 include(fb.ComponentPath + 'samples\\complete\\js\\seekbar.js');
 
-let XmlHttp = new ActiveXObject('MSXML2.XMLHTTP');
-let fileStream = new ActiveXObject('ADODB.Stream');
-let fileSystemObject = new ActiveXObject('Scripting.FileSystemObject');
+const DT_EXPANDTABS = 0x00000040,
+    DT_WORD_ELLIPSIS = 0x00040000;
 
-const TAG_IMG = '<img src=';
-const TEMP_IMAGE = fileSystemObject.GetSpecialFolder(2) + '\\hsm_temp_img.png';
-const FOOBAR2000_IMG = _img(fb.ComponentPath + '\\HybridSpiderMonkey\\images\\foobar2000.png');
-const ALBUM_IMG = _img(fb.ComponentPath + '\\HybridSpiderMonkey\\images\\album.png');
+const FontTypeDUI = {
+    defaults: 0,
+    tabs: 1,
+    lists: 2,
+    playlists: 3,
+    statusbar: 4,
+    console: 5
+};
 
-let panel = new _panel();
-let buttons = new _buttons();
-let seekbar = new _seekbar(0, 0, 0, 0);
+const IMG = {
+    foobar2000: _img(fb.ComponentPath + 'HybridSpiderMonkey\\images\\foobar2000.png'),
+    album: _img(fb.ComponentPath + 'HybridSpiderMonkey\\images\\album.png')
+}
 
-let albumImg = null;
-let metaData = null;
+let panel = new _panel(),
+    buttons = new _buttons(),
+    seekbar = new _seekbar(0, 0, 0, 0);
+
+let fonts = {};
 
 let metas = {
+    db: null,
+    img: null,
+    albumDesc: '',
+    albumDescName: 'ALBUMDESCRIPTION',
     path: 3,
+    splitter: '\t  ',
     list: ['Title', 'Artist', 'Album', 'Path', 'Date'],
     saycast: ['Artist', 'Title', 'Album', 'Path', 'Date'],
     x: 0,
     y: 0,
     w: 0,
     h: 0,
-    x2: 0,
-    w2: 0,
-    metaNameW: 7,
-    lineH: 1.2
+    wheel: 0,
+    lineCount: 0,
+    linePerPage: 0
 };
 
 let button = {
     x: 0,
     y: 0,
-    stopId: 1,
+    w: 0,
+    h: 32,
     playId: 3,
     pauseId: 4,
-    h: 32,
     text: ['Menu', 'Stop', 'Previous', 'Play', 'Pause', 'Next', 'Random', 'Console', 'Layout editing mode'],
-    img: [FOOBAR2000_IMG ? FOOBAR2000_IMG : 'M',
-        '\u23F9', '\u23EE', '\u23F5', '\u23f8', '\u23ED', 'R', 'C', 'L'
+    img: [IMG.foobar2000 || 'M', '\u23F9', '\u23EE', '\u23F5', '\u23f8', '\u23ED', 'R', 'C', 'L'
     ],
     func: [(x, y, mask) => {
         _menu(x, y);
@@ -75,71 +85,37 @@ let playtime = {
     h: 0
 }
 
+on_font_changed();
 on_selection_changed();
 
-function getAlbum() {
-    if (metaData) {
-        albumImg = utils.GetAlbumArtV2(metaData, 0);
-
-        if (!albumImg) {
-            let title = fb.TitleFormat('%title%').EvalWithMetadb(metaData);
-            if (title.startsWith(TAG_IMG) && title.endsWith('>')) {
-                if (downloadFile(title.substr(TAG_IMG.length, title.length - TAG_IMG.length - 1)))
-                    albumImg = _img(TEMP_IMAGE);
-            }
-            else albumImg = ALBUM_IMG;
-        }
-    }
-    window.Repaint();
-}
-
 function isStreaming() {
-    return metaData.RawPath.includes('http:') || metaData.RawPath.includes('https:');
+    return metas.db.RawPath.includes('http:') || metas.db.RawPath.includes('https:');
 }
 
 function getMetaValue(meta, i) {
     if (isStreaming()) {
         // at saycast url, change the title with the singer
-        if (metaData.Path.includes('saycast.com')) meta = metas.saycast[i];
+        if (metas.db.Path.includes('saycast.com')) meta = metas.saycast[i];
     }
-    return fb.TitleFormat('%' + meta + '%').Eval();
+    return fb.TitleFormat('%' + meta + '%').Eval(true);
 }
 
-function downloadFile(url) {
-    if (fileSystemObject.FileExists(TEMP_IMAGE)) {
-        try {
-            fileSystemObject.DeleteFile(TEMP_IMAGE);
-        } catch (e) {
-            return false;
-        }
-    }
-    try {
-        XmlHttp.open('GET', url, false);
-        XmlHttp.send();
-    } catch (e) {
-        return false;
-    }
-    if (XmlHttp.ActiveX_Get('Status') == 200) {
-        fileStream.Open();
-        fileStream.ActiveX_Set('Type', 1);
-        fileStream.Write(XmlHttp.ActiveX_Get('ResponseBody'));
-        fileStream.ActiveX_Set('Position', 0);
-        fileStream.SaveToFile(TEMP_IMAGE);
-        fileStream.Close();
-        return true;
-    }
-    return false;
+function getMetaData() {
+    metas.wheel = 0;
+    metas.lineCount = 0;
+    metas.albumDesc = metas.db ? fb.TitleFormat('%' + metas.albumDescName + '%').Eval(true) : '';
+    metas.img = metas.db ? (utils.GetAlbumArtV2(metas.db, 0) || IMG.album) : IMG.album;
 }
 
 function updateButtons() {
     let x = button.x;
-    for (let i = 0; i < button.text.length; i++) {
-        let h = ((i == button.stopId && !fb.IsPlaying) ||
-            (i == button.playId && fb.IsPlaying && !fb.IsPaused) ||
-            (i == button.pauseId && (!fb.IsPlaying || fb.IsPaused))) ? 0 : button.h;
+    const isPlaying = fb.IsPlaying && !fb.IsPaused;
+    for (let i = 0, length = button.text.length; i < length; i++) {
+        let h = ((i == button.playId && isPlaying) || (i == button.pauseId && !isPlaying)) ? 0 : button.h;
 
         buttons.buttons[i] = new _button(x, button.y, h, h, {
-            normal: (typeof button.img[i] == 'string' ? _chrToImg(button.img[i], panel.colours.text) : button.img[i])
+            normal: (typeof button.img[i] == 'string' ?
+                _chrToImg(button.img[i], panel.colours.text) : button.img[i])
         }, button.func[i], button.text[i]);
         x += h;
     }
@@ -150,26 +126,43 @@ function on_paint(gr) {
     buttons.paint(gr);
 
     // album art
-    if (albumImg) _drawImage(gr, albumImg, 0, 0, panel.h, panel.h, image.centre);
+    if (metas.img) _drawImage(gr, metas.img, 0, 0, panel.h, panel.h, image.centre);
 
-    if (metaData) {
-        // track info
-        let y = metas.y;
-        for (let i = 0; i < metas.list.length; i++) {
+    if (metas.db) {
+        let info = '';
+        for (let i = 0, length = metas.list.length; i < length; i++) {
             // path show only streaming url
             if (i == metas.path && !isStreaming()) continue;
 
             const meta = metas.list[i];
             let text = fb.IsPlaying ? getMetaValue(meta, i) :
-                fb.TitleFormat('%' + meta + '%').EvalWithMetadb(metaData);
-
+                fb.TitleFormat('%' + meta + '%').EvalWithMetadb(metas.db);
             // skip space or html tag
             if (!text || text == '?' || text.startsWith('<')) continue;
-
-            gr.GdiDrawText(meta, panel.fonts.title, panel.colours.text, metas.x, y, metas.w, metas.h, 0);
-            gr.GdiDrawText(text, panel.fonts.title, panel.colours.text, metas.x2, y, metas.w2, metas.h, 0);
-            y += metas.h;
+            info += meta + metas.splitter + text + '\n';
         }
+        let fontInfo = fonts.title;
+        if (metas.albumDesc && metas.albumDesc.length > 1) {
+            info += '\n' + metas.albumDesc;
+            metas.lineCount = metas.lineCount || gr.MeasureString(info, fontInfo, metas.x, metas.y,
+                metas.w, fonts.desc.Height * 1000, 0).Lines;
+
+            fontInfo = fonts.desc;
+            if (metas.lineCount > metas.linePerPage) {
+                gr.GdiDrawText(metas.wheel + ' / ' + metas.lineCount, fonts.desc, panel.colours.text,
+                    playtime.x, playtime.y, playtime.w, playtime.h, 0);
+            }
+        }
+        if (info) {
+            let scrollText = fontInfo.Height * metas.wheel;
+            gr.GdiDrawText('\n' + info, fontInfo, panel.colours.text,
+                metas.x, metas.y - scrollText, metas.w, metas.h + scrollText, DT_EXPANDTABS | DT_WORDBREAK);
+        }
+
+        // play time & length
+        let playTimeText = fb.IsPlaying ? playtime.playing.Eval() : playtime.stop.EvalWithMetadb(metas.db);
+        gr.GdiDrawText(playTimeText, fonts.desc, panel.colours.text,
+            playtime.x, playtime.y, playtime.w, playtime.h, 2);
 
         // seek bar progress
         if (fb.IsPlaying && fb.PlaybackLength > 0) {
@@ -178,40 +171,38 @@ function on_paint(gr) {
     }
     // seek bar border line
     gr.DrawRect(seekbar.x, seekbar.y, seekbar.w, seekbar.h, 1, panel.colours.text);
-
-    // play time & length
-    playtime.y = seekbar.y - metas.h;
-    playtime.h = metas.h;
-    let playTimeText = fb.IsPlaying ? playtime.playing.Eval() : playtime.stop.EvalWithMetadb(metaData);
-    gr.GdiDrawText(playTimeText, panel.fonts.normal, panel.colours.text,
-        playtime.x, playtime.y, playtime.w, playtime.h, 2);
 }
 
 function on_size() {
     panel.size();
+    let margin = button.h / 2;
+
+    // buttons position
+    button.x = panel.h + margin;
+    button.w = button.h * (button.text.length - 1);
+    button.y = panel.h - button.h - margin / 2;
 
     // seek bar position
-    let margin = panel.fonts.title.Height;
-    seekbar.h = panel.fonts.title.Height * 0.6;
-    seekbar.x = panel.h + margin;
+    seekbar.h = 12;
+    seekbar.x = button.x + button.w;
     seekbar.w = panel.w - seekbar.x - margin;
     seekbar.y = panel.h - seekbar.h - margin;
-
-    // track info position
-    metas.x = seekbar.x;
-    metas.w = panel.fonts.title.Size * metas.metaNameW;
-    metas.y = margin;
-    metas.h = panel.fonts.title.Height * metas.lineH;
-    metas.w2 = panel.w - metas.x - metas.w;
-    metas.x2 = metas.x + metas.w;
 
     // play time position
     playtime.x = seekbar.x;
     playtime.w = seekbar.w;
+    playtime.h = fonts.title.Height;
+    playtime.y = seekbar.y - playtime.h;
 
-    // buttons position
-    button.x = seekbar.x;
-    button.y = seekbar.y - button.h;
+    // track info position
+    metas.x = button.x;
+    metas.w = seekbar.w + button.w;
+    metas.y = 0;
+    metas.h = button.y - metas.y - margin;
+    metas.linePerPage = Math.floor(metas.h / fonts.desc.Height);
+    metas.h = fonts.desc.Height * metas.linePerPage;
+    metas.wheel = 0;
+    metas.lineCount = 0;
 
     updateButtons();
 }
@@ -221,30 +212,35 @@ function on_mouse_lbtn_down(x, y) {
 }
 
 function on_mouse_lbtn_up(x, y) {
-    if (buttons.lbtn_up(x, y)) return;
-    if (seekbar.lbtn_up(x, y)) return;
-    fb.RunMainMenuCommand('View/Show now playing in playlist');
+    buttons.lbtn_up(x, y) || seekbar.lbtn_up(x, y) ||
+        fb.RunMainMenuCommand('View/Show now playing in playlist');
 }
 
 function on_mouse_move(x, y) {
-    if (buttons.move(x, y)) return;
-    seekbar.move(x, y);
+    buttons.move(x, y) || seekbar.move(x, y);
 }
 
 function on_mouse_wheel(s) {
     if (seekbar.wheel(s)) return;
-    if (s == 1) fb.Prev();
-    else fb.Next();
+    if (s == 1 && metas.wheel > 0) {
+        metas.wheel -= metas.linePerPage;
+        if (metas.wheel < 0) metas.wheel = 0;
+    } else if ((metas.wheel + metas.linePerPage) <= metas.lineCount) {
+        metas.wheel += metas.linePerPage;
+    } else return;
+    window.Repaint();
 }
 
 function on_selection_changed() {
-    metaData = fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem();
-    getAlbum();
+    metas.db = fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem();
+    getMetaData();
+    window.Repaint();
 }
 
 function on_playback_new_track(metadb) {
-    metaData = metadb;
-    getAlbum();
+    metas.db = metadb;
+    getMetaData();
+    window.Repaint();
 }
 
 function on_playback_edited(time) {
@@ -280,5 +276,7 @@ function on_colours_changed() {
 }
 
 function on_font_changed() {
-    panel.font_changed();
+    fonts.desc = window.GetFontDUI(FontTypeDUI.defaults);
+    fonts.title = gdi.Font(fonts.desc.Name, fonts.desc.Size + 3);
+    window.Repaint();
 }

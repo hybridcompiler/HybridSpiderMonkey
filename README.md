@@ -3,6 +3,8 @@ foobar2000 spider monkey panel script
 
 ![](README/screenshot1.png)
 
+![](README/screenshot2.png)
+
 ## Install
 
 1. Navigate to the [releases](https://github.com/hybridcompiler/HybridSpiderMonkey/releases) page
