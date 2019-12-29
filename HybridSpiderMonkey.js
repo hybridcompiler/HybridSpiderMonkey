@@ -16,6 +16,11 @@ const FontTypeDUI = {
     console: 5
 };
 
+var FontTypeCUI = {
+	items: 0,
+	labels: 1
+};
+
 const IMG = {
     foobar2000: _img(fb.ComponentPath + 'HybridSpiderMonkey\\images\\foobar2000.png'),
     album: _img(fb.ComponentPath + 'HybridSpiderMonkey\\images\\album.png')
@@ -278,7 +283,7 @@ function on_colours_changed() {
 }
 
 function on_font_changed() {
-    fonts.desc = window.GetFontDUI(FontTypeDUI.defaults);
+    fonts.desc = window.InstanceType ? window.GetFontDUI(0) : window.GetFontCUI(0);
     fonts.title = gdi.Font(fonts.desc.Name, fonts.desc.Size + 3);
     window.Repaint();
 }
