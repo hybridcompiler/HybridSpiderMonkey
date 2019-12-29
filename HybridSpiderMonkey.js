@@ -263,6 +263,8 @@ function on_playback_stop() {
 
 function on_playback_starting() {
     updateButtons();
+    metas.db = fb.GetNowPlaying() || fb.GetFocusItem();
+    getMetaData();
     window.Repaint();
 }
 

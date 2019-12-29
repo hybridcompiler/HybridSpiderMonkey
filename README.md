@@ -1,9 +1,9 @@
 # HybridSpiderMonkey
 foobar2000 spider monkey panel script
 
-![](README/screenshot1.png)
+![20191228 Screenshot](README/screenshot1.png)
 
-![](README/screenshot2.png)
+![20191229 Screenshot](README/screenshot2.png)
 
 ## Install
 
