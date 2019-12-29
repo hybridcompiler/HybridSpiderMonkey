@@ -144,10 +144,10 @@ function on_paint(gr) {
         let fontInfo = fonts.title;
         if (metas.albumDesc && metas.albumDesc.length > 1) {
             info += '\n' + metas.albumDesc;
+            fontInfo = fonts.desc;
             metas.lineCount = metas.lineCount || gr.MeasureString(info, fontInfo, metas.x, metas.y,
                 metas.w, fonts.desc.Height * 1000, 0).Lines;
 
-            fontInfo = fonts.desc;
             if (metas.lineCount > metas.linePerPage) {
                 gr.GdiDrawText(metas.wheel + ' / ' + metas.lineCount, fonts.desc, panel.colours.text,
                     playtime.x, playtime.y, playtime.w, playtime.h, 0);
