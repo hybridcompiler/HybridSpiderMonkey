@@ -9,7 +9,7 @@ const BUTTON_SIZE = 16;
 
 let panel = new HsmPanel(),
   toolbar = new HsmToolbar(panel, DOCK_LEFT, BUTTON_SIZE, 0, 0, [
-    [0, (x, y, mask) => Hsm.toggleMenu(), 'Show/Hide Menu', '\u2630'],
+    //[0, (x, y, mask) => Hsm.toggleMenu(), 'Show/Hide Menu', '\u2630'],
     [0, () => fb.Stop(), 'Stop', '\uF04D'],
     [0, () => fb.Prev(), 'Previous', '\uF049'],
     [0, () => fb.PlayOrPause(), 'Play', '\uF04B'],

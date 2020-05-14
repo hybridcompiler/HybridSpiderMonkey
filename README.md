@@ -13,7 +13,7 @@ foobar2000 spider monkey panel script & theme
 2. Navigate to the [releases](https://github.com/hybridcompiler/HybridSpiderMonkey/releases) page
 3. Download the latest release
 4. Extract file to foobar2000 folder\user-components\foo_spider_monkey_panel\HybridSpiderMonkey
-5. Install foobar2000 folder\user-components\foo_spider_monkey_panel\HybridSpiderMonkey\font\Font Awesome 5 Free-Solid-900.otf
+5. Install foobar2000 folder\user-components\foo_spider_monkey_panel\HybridSpiderMonkey\font\FontAwesome.otf
 6. Run foobar2000
 7. Add spider monkey panel & import samples folder scripts
 
