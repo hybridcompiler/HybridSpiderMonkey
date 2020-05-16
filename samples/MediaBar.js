@@ -22,7 +22,7 @@ let panel = new HsmPanel(),
   trackbar = new HsmMediaTrackBar(panel, DOCK_FILL),
   volumebar = new HsmVolume(panel, DOCK_FILL);
 
-const PLAY_BUTTON_ID = 3;
+const PLAY_BUTTON_ID = 2;
 const PLAY_BUTTON = toolbar.buttons[PLAY_BUTTON_ID];
 const PAUSE_BUTTON = new HsmButton(0, 0, BUTTON_SIZE, BUTTON_SIZE,
   () => fb.PlayOrPause(), 'Pause', '\uF04C');
