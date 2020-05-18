@@ -1,14 +1,13 @@
-/// <reference path="./../../docs/js/foo_spider_monkey_panel.js" />
 'use strict';
-
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmPanel.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmToolBar.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmTrackBar.js');
+let libPath = fb.ComponentPath + 'HybridSpiderMonkey/lib/'
+include(libPath + 'HsmPanel.js');
+include(libPath + 'HsmToolBar.js');
+include(libPath + 'HsmTrackBar.js');
 
 const BUTTON_SIZE = 16;
 
 let panel = new HsmPanel(),
-  toolbar = new HsmToolbar(panel, DOCK_LEFT, BUTTON_SIZE, 0, 0, [
+  toolbar = new HsmToolbar(panel, HsmDock.left, BUTTON_SIZE, 0, 0, [
     //[0, (x, y, mask) => Hsm.toggleMenu(), 'Show/Hide Menu', '\u2630'],
     [0, () => fb.Stop(), 'Stop', '\uF04D'],
     [0, () => fb.Prev(), 'Previous', '\uF049'],
@@ -19,8 +18,8 @@ let panel = new HsmPanel(),
     [0, () => fb.RunMainMenuCommand(window.InstanceType ?
       'Enable layout editing mode' : 'Live editing'), 'Layout editing mode', '\uF009'],
   ]),
-  trackbar = new HsmMediaTrackBar(panel, DOCK_FILL),
-  volumebar = new HsmVolume(panel, DOCK_FILL);
+  trackbar = new HsmMediaTrackBar(panel, HsmDock.fill),
+  volumebar = new HsmVolume(panel, HsmDock.fill);
 
 const PLAY_BUTTON_ID = 2;
 const PLAY_BUTTON = toolbar.buttons[PLAY_BUTTON_ID];

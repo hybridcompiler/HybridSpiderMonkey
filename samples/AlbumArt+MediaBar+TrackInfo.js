@@ -1,19 +1,18 @@
-/// <reference path="./../../docs/js/foo_spider_monkey_panel.js" />
 'use strict';
-
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmCustom.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmPanel.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmImage.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmText.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmToolBar.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmTrackBar.js');
+let libPath = fb.ComponentPath + 'HybridSpiderMonkey/lib/'
+include(libPath + 'HsmCustom.js');
+include(libPath + 'HsmPanel.js');
+include(libPath + 'HsmImage.js');
+include(libPath + 'HsmText.js');
+include(libPath + 'HsmToolBar.js');
+include(libPath + 'HsmTrackBar.js');
 
 const BUTTON_SIZE = 16;
 
 let panel = new HsmPanel(),
-  albumArt = new HsmImage(panel, DOCK_LEFT | DOCK_SQUARE),
-  trackInfo = new HsmText(panel, DOCK_FILL),
-  toolbar = new HsmToolbar(panel, DOCK_LEFT, BUTTON_SIZE, 0, 0, [
+  albumArt = new HsmImage(panel, HsmDock.left | HsmDock.square),
+  trackInfo = new HsmText(panel, HsmDock.fill),
+  toolbar = new HsmToolbar(panel, HsmDock.left, BUTTON_SIZE, 0, 0, [
     //[0, (x, y, mask) => Hsm.toggleMenu(), 'Show/Hide Menu', '\u2630'],
     [0, () => fb.Stop(), 'Stop', '\uF04D'],
     [0, () => fb.Prev(), 'Previous', '\uF049'],
@@ -24,8 +23,8 @@ let panel = new HsmPanel(),
     [0, () => fb.RunMainMenuCommand(window.InstanceType ?
       'Enable layout editing mode' : 'Live editing'), 'Layout Editing Mode', '\uF009'],
   ]),
-  trackbar = new HsmMediaTrackBar(panel, DOCK_FILL),
-  volumebar = new HsmVolume(panel, DOCK_FILL);
+  trackbar = new HsmMediaTrackBar(panel, HsmDock.fill),
+  volumebar = new HsmVolume(panel, HsmDock.fill);
 
 const PLAY_BUTTON_ID = 2;
 const PLAY_BUTTON = toolbar.buttons[PLAY_BUTTON_ID];

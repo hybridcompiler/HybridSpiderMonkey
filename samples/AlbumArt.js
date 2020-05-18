@@ -1,8 +1,7 @@
-/// <reference path="./../../docs/js/foo_spider_monkey_panel.js" />
 'use strict';
-
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmPanel.js');
-include(fb.ComponentPath + 'HybridSpiderMonkey\\lib\\HsmImage.js');
+let libPath = fb.ComponentPath + 'HybridSpiderMonkey/lib/'
+include(libPath + 'HsmPanel.js');
+include(libPath + 'HsmImage.js');
 
 let panel = new HsmPanel(),
   albumArt = new HsmImage(panel, DOCK_LEFT | DOCK_SQUARE);
